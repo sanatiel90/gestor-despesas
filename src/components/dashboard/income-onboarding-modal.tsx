@@ -15,10 +15,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Wallet, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface IncomeOnboardingModalProps {
   isOpen: boolean;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
 export function IncomeOnboardingModal({ isOpen, onSuccess }: IncomeOnboardingModalProps) {
@@ -26,6 +27,7 @@ export function IncomeOnboardingModal({ isOpen, onSuccess }: IncomeOnboardingMod
   const [rawIncome, setRawIncome] = useState("");
   const [isPending, setIsPending] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const router = useRouter();
 
   // Formata o input para moeda BRL enquanto digita
   function handleIncomeChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -69,15 +71,16 @@ export function IncomeOnboardingModal({ isOpen, onSuccess }: IncomeOnboardingMod
     } else {
       toast.success("Renda cadastrada com sucesso!");
       setOpen(false);
-      onSuccess();
+      onSuccess?.();
+      router.refresh();
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md border-border/80 bg-card p-6">
         <DialogHeader className="text-center sm:text-left space-y-2">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
             <Sparkles className="h-5 w-5" />
           </div>
           <DialogTitle className="text-xl font-bold">Defina sua Renda Mensal Líquida</DialogTitle>
@@ -86,9 +89,9 @@ export function IncomeOnboardingModal({ isOpen, onSuccess }: IncomeOnboardingMod
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+        <form onSubmit={handleSubmit} className="space-y-5 pt-2">
           {errorMsg && (
-            <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs font-medium text-red-600 dark:text-red-400">
+            <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs font-medium text-red-400">
               {errorMsg}
             </div>
           )}
@@ -108,7 +111,7 @@ export function IncomeOnboardingModal({ isOpen, onSuccess }: IncomeOnboardingMod
                 value={rawIncome}
                 onChange={handleIncomeChange}
                 disabled={isPending}
-                className="pl-9 text-base font-semibold"
+                className="pl-9 h-11 text-base font-semibold bg-secondary/50"
                 autoFocus
                 required
               />
@@ -130,7 +133,7 @@ export function IncomeOnboardingModal({ isOpen, onSuccess }: IncomeOnboardingMod
             <Button
               type="submit"
               disabled={isPending}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
             >
               {isPending ? (
                 <>

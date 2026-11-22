@@ -19,6 +19,12 @@ export default async function DashboardPage() {
     .eq("id", user?.id)
     .single();
 
+  // Contagem de cartões reais cadastrados
+  const { count: cardsCount } = await supabase
+    .from("credit_cards")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user?.id || "");
+
   const netIncome = Number(profile?.net_monthly_income || 0);
   const showOnboarding = netIncome === 0;
 
@@ -26,7 +32,7 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       {/* Onboarding Dialog quando renda não está configurada */}
       {showOnboarding && (
-        <IncomeOnboardingModal isOpen={true} onSuccess={() => {}} />
+        <IncomeOnboardingModal isOpen={true} />
       )}
 
       {/* Hero Welcome banner */}
@@ -47,7 +53,7 @@ export default async function DashboardPage() {
               className="inline-flex items-center justify-center rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 text-sm shadow-sm transition-colors"
             >
               <CreditCard className="mr-2 h-4 w-4" />
-              Cadastrar Cartão
+              {cardsCount && cardsCount > 0 ? "Gerenciar Cartões" : "Cadastrar Cartão"}
             </Link>
           </div>
         </div>
@@ -69,16 +75,16 @@ export default async function DashboardPage() {
       {/* Grid de Resumo Financeiro Inicial */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {/* Card Renda */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="p-5">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Renda Mensal Líquida
             </CardTitle>
-            <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
               <Wallet className="h-4 w-4" />
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0 pt-2">
             <div className="text-2xl font-bold tracking-tight">
               {formatCurrencyBRL(netIncome)}
             </div>
@@ -88,37 +94,39 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Card Fase 2 Próximo Passo */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Cartões de Crédito
-            </CardTitle>
-            <div className="h-8 w-8 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
-              <CreditCard className="h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold tracking-tight">
-              0 cadastrados
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Ciclos de fechamento e vencimento de fatura (Fase 2)
-            </p>
-          </CardContent>
-        </Card>
+        {/* Card Cartões de Crédito */}
+        <Link href="/cards" className="block group">
+          <Card className="p-5 transition-all group-hover:border-border group-hover:shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                Cartões de Crédito
+              </CardTitle>
+              <div className="h-8 w-8 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                <CreditCard className="h-4 w-4" />
+              </div>
+            </CardHeader>
+            <CardContent className="p-0 pt-2">
+              <div className="text-2xl font-bold tracking-tight">
+                {cardsCount ?? 0} {cardsCount === 1 ? "cadastrado" : "cadastrados"}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Ciclos de fechamento e vencimento de fatura
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
 
         {/* Card Projeção Futura */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="p-5">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Projeção Futura
             </CardTitle>
-            <div className="h-8 w-8 rounded-lg bg-purple-500/10 text-purple-600 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center">
               <CalendarDays className="h-4 w-4" />
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0 pt-2">
             <div className="text-2xl font-bold tracking-tight">
               12 Meses
             </div>
@@ -130,18 +138,18 @@ export default async function DashboardPage() {
       </div>
 
       {/* Roteiro do que esperar do sistema */}
-      <Card>
-        <CardHeader>
+      <Card className="p-6">
+        <CardHeader className="p-0 pb-4">
           <CardTitle className="text-lg font-bold">Como funciona o seu gestor</CardTitle>
           <CardDescription>
             Planeje seu futuro financeiro sem perder tempo registrando pequenos gastos diários.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="p-0">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-xl border border-border/60 p-4 space-y-2">
               <div className="flex items-center gap-2 font-semibold text-sm">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                 1. Renda e Cartões
               </div>
               <p className="text-xs text-muted-foreground">
@@ -151,7 +159,7 @@ export default async function DashboardPage() {
 
             <div className="rounded-xl border border-border/60 p-4 space-y-2">
               <div className="flex items-center gap-2 font-semibold text-sm">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                 2. Compromissos e Parcelas
               </div>
               <p className="text-xs text-muted-foreground">
@@ -161,7 +169,7 @@ export default async function DashboardPage() {
 
             <div className="rounded-xl border border-border/60 p-4 space-y-2">
               <div className="flex items-center gap-2 font-semibold text-sm">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                 3. Projeção de 12 Meses
               </div>
               <p className="text-xs text-muted-foreground">
