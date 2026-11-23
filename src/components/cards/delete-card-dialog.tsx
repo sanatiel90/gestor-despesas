@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { CreditCardRecord } from "@/schemas/cards";
 import { deleteCreditCardAction } from "@/app/actions/cards";
 import {
@@ -20,7 +21,7 @@ interface DeleteCardDialogProps {
   card: CreditCardRecord | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
+  onSuccess?: (deletedCardId: string) => void;
 }
 
 export function DeleteCardDialog({
@@ -29,12 +30,14 @@ export function DeleteCardDialog({
   onOpenChange,
   onSuccess,
 }: DeleteCardDialogProps) {
+  const router = useRouter();
   const [isPending, setIsPending] = useState(false);
 
   async function handleDelete() {
     if (!card) return;
     setIsPending(true);
-    const result = await deleteCreditCardAction(card.id);
+    const cardId = card.id;
+    const result = await deleteCreditCardAction(cardId);
 
     if (result.error) {
       toast.error(result.error);
@@ -43,7 +46,8 @@ export function DeleteCardDialog({
       toast.success(`Cartão "${card.name}" excluído.`);
       setIsPending(false);
       onOpenChange(false);
-      onSuccess?.();
+      onSuccess?.(cardId);
+      router.refresh();
     }
   }
 

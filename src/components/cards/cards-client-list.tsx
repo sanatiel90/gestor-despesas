@@ -1,22 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { CreditCardRecord } from "@/schemas/cards";
 import { CardItem } from "@/components/cards/card-item";
 import { CardFormDialog } from "@/components/cards/card-form-dialog";
 import { DeleteCardDialog } from "@/components/cards/delete-card-dialog";
 import { Button } from "@/components/ui/button";
-import { Plus, CreditCard, Sparkles } from "lucide-react";
+import { Plus, CreditCard } from "lucide-react";
 
 interface CardsClientListProps {
   initialCards: CreditCardRecord[];
 }
 
 export function CardsClientList({ initialCards }: CardsClientListProps) {
+  const router = useRouter();
   const [cards, setCards] = useState<CreditCardRecord[]>(initialCards);
   const [formOpen, setFormOpen] = useState(false);
   const [editingCard, setEditingCard] = useState<CreditCardRecord | null>(null);
   const [deletingCard, setDeletingCard] = useState<CreditCardRecord | null>(null);
+
+  // Sincroniza estado local se o Server Component recarregar com novos dados
+  useEffect(() => {
+    setCards(initialCards);
+  }, [initialCards]);
 
   function handleOpenCreate() {
     setEditingCard(null);
@@ -30,6 +37,30 @@ export function CardsClientList({ initialCards }: CardsClientListProps) {
 
   function handleOpenDelete(card: CreditCardRecord) {
     setDeletingCard(card);
+  }
+
+  function handleFormSuccess(savedCard?: CreditCardRecord) {
+    if (!savedCard) {
+      router.refresh();
+      return;
+    }
+
+    if (editingCard) {
+      // Atualiza o cartão na lista imediatamente
+      setCards((prev) =>
+        prev.map((c) => (c.id === savedCard.id ? savedCard : c))
+      );
+    } else {
+      // Adiciona o novo cartão no topo da lista imediatamente
+      setCards((prev) => [savedCard, ...prev]);
+    }
+    router.refresh();
+  }
+
+  function handleDeleteSuccess(deletedId: string) {
+    // Remove o cartão da lista imediatamente
+    setCards((prev) => prev.filter((c) => c.id !== deletedId));
+    router.refresh();
   }
 
   return (
@@ -88,12 +119,14 @@ export function CardsClientList({ initialCards }: CardsClientListProps) {
         isOpen={formOpen}
         onOpenChange={setFormOpen}
         cardToEdit={editingCard}
+        onSuccess={handleFormSuccess}
       />
 
       <DeleteCardDialog
         card={deletingCard}
         isOpen={!!deletingCard}
         onOpenChange={(open) => !open && setDeletingCard(null)}
+        onSuccess={handleDeleteSuccess}
       />
     </div>
   );
